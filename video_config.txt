@@ -1,0 +1,17 @@
+# Video Configuration File
+# Created for video upload settings
+
+# Video storage path configuration
+storage.path=./uploads/videos
+
+# Supported video formats
+video.formats=mp4,avi,mov,wmv,flv,mkv,webm
+
+# Maximum file size (100MB)
+video.max-size=104857600
+
+# Thumbnail directory (now stored in the same directory as videos)
+thumbnail.path=./uploads/videos
+
+# Thumbnail maximum size (5MB)
+thumbnail.max-size=5242880

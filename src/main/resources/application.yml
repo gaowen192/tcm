@@ -1,0 +1,129 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+spring:
+  application:
+    name: qianxing-service
+  
+  # 文件上传配置
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 100MB
+      max-request-size: 105MB
+  
+  # 数据库配置
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://95.40.33.105:3306/cmhkdb?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8
+    username: root
+    password: "!Smartcmhk123"
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+  
+  # JPA配置
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        format_sql: true
+        # 启用Hibernate统计功能
+        generate_statistics: true
+        # 启用二级缓存
+        cache.use_second_level_cache: true
+        # 启用查询缓存
+        cache.use_query_cache: true
+        # 设置缓存提供者（使用JCache兼容的EhCache 3.x）
+        cache.region.factory_class: org.hibernate.cache.jcache.JCacheRegionFactory
+  
+  # DevTools配置
+  devtools:
+    restart:
+      enabled: true
+      additional-paths: src/main/java
+
+# 日志配置
+logging:
+  level:
+    com.ride: debug
+    org.springframework.web: info
+    org.hibernate.SQL: debug
+    # 记录Hibernate统计信息
+    org.hibernate.stat: debug
+    # 记录Hibernate缓存操作
+    org.hibernate.cache: debug
+    org.hibernate.type.descriptor.sql.BasicBinder: trace
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+
+# Swagger配置
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    display-request-duration: true
+    operations-sorter: method
+    tags-sorter: alpha
+    pathMapping: /
+    custom-css: |
+      .swagger-ui .topbar { display: none; }
+      .swagger-ui .info { margin: 50px 0; }
+      body { -webkit-user-select: text !important; -moz-user-select: text !important; -ms-user-select: text !important; user-select: text !important; }
+      input, select, textarea { -webkit-user-select: text !important; -moz-user-select: text !important; -ms-user-select: text !important; user-select: text !important; }
+      .copy-to-clipboard { display: block !important; opacity: 1 !important; }
+    custom-site-css: |
+      body, input, select, textarea {
+        -webkit-user-select: text !important;
+        -moz-user-select: text !important;
+        -ms-user-select: text !important;
+        user-select: text !important;
+      }
+      .copy-to-clipboard {
+        display: block !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+      }
+  info:
+    title: 千行服务API文档
+    description: 千行服务RESTful API接口文档
+    version: 1.0.0
+    contact:
+      name: 千行团队
+      email: support@qianxing.com
+    license:
+      name: MIT License
+      url: https://opensource.org/licenses/MIT
+  packages-to-scan: com.ride.controller
+
+# 自定义配置
+qianxing:
+  info:
+    app:
+      name: 千行服务
+      version: 1.0.0
+      description: Spring Boot微服务项目
+
+# 视频配置
+video:
+  # 视频存储路径配置
+  storage:
+    path: ./uploads/videos
+  # 支持的视频格式
+  formats: mp4,avi,mov,wmv,flv,mkv,webm
+  # 最大文件大小（100MB）
+  max-size: 104857600
+  # 缩略图配置
+  thumbnail:
+    # 缩略图路径（与视频存储在同一目录）
+    path: ./uploads/videos
+    # 缩略图最大大小（5MB）
+    max-size: 5242880

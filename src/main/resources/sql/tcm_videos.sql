@@ -1,0 +1,43 @@
+-- =====================================================
+-- 视频表 (tcm_videos)
+-- =====================================================
+DROP TABLE IF EXISTS `tcm_videos`;
+CREATE TABLE `tcm_videos` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '视频ID',
+  `title` varchar(200) NOT NULL COMMENT '视频标题',
+  `description` text COMMENT '视频描述',
+  `user_id` bigint(20) NOT NULL COMMENT '上传用户ID',
+  `category_id` bigint(20) NOT NULL COMMENT '所属板块ID',
+  `file_path` varchar(500) NOT NULL COMMENT '视频文件路径',
+  `thumbnail_path` varchar(500) DEFAULT NULL COMMENT '缩略图路径',
+  `duration` int(11) DEFAULT NULL COMMENT '视频时长（秒）',
+  `file_size` bigint(20) DEFAULT NULL COMMENT '文件大小（字节）',
+  `format` varchar(20) DEFAULT NULL COMMENT '视频格式（如mp4, avi等）',
+  `resolution` varchar(50) DEFAULT NULL COMMENT '分辨率（如1920x1080）',
+  `bitrate` int(11) DEFAULT NULL COMMENT '比特率（kbps）',
+  `codec` varchar(50) DEFAULT NULL COMMENT '编解码器',
+  `tags` varchar(500) DEFAULT NULL COMMENT '标签，逗号分隔',
+  `view_count` bigint(20) NOT NULL DEFAULT '0' COMMENT '观看次数',
+  `like_count` bigint(20) NOT NULL DEFAULT '0' COMMENT '点赞次数',
+  `comment_count` bigint(20) NOT NULL DEFAULT '0' COMMENT '评论次数',
+  `download_count` bigint(20) NOT NULL DEFAULT '0' COMMENT '下载次数',
+  `upload_ip` varchar(50) DEFAULT NULL COMMENT '上传IP地址',
+  `status` tinyint(1) NOT NULL DEFAULT '1' COMMENT '状态：0-禁用，1-启用，2-审核中',
+  `is_hot` tinyint(1) NOT NULL DEFAULT '0' COMMENT '是否热门',
+  `is_recommended` tinyint(1) NOT NULL DEFAULT '0' COMMENT '是否推荐',
+  `playback_url` varchar(500) DEFAULT NULL COMMENT '视频播放URL（CDN地址）',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `published_at` timestamp NULL DEFAULT NULL COMMENT '发布时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_user_id` (`user_id`),
+  KEY `idx_category_id` (`category_id`),
+  KEY `idx_status` (`status`),
+  KEY `idx_created_at` (`created_at`),
+  KEY `idx_updated_at` (`updated_at`),
+  KEY `idx_published_at` (`published_at`),
+  KEY `idx_is_hot` (`is_hot`),
+  KEY `idx_is_recommended` (`is_recommended`),
+  KEY `idx_view_count` (`view_count`),
+  KEY `idx_title` (`title`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='视频表';
