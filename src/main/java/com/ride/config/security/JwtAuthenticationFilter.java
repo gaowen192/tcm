@@ -22,7 +22,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Enumeration;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ride.common.Result;
 
 /**
  * JWT认证过滤器
@@ -39,63 +42,66 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Autowired
     private UserDetailsService userDetailsService;
 
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
         String requestURI = request.getRequestURI();
         System.out.println("=============== JwtAuthenticationFilter processing request: " + requestURI);
         
-        String authHeader = request.getHeader("Authorization");
-
-
-        String username = null;
-        String jwtToken = null;
-        logger.warn("===1111111111111=======request.getHeaderNames()===== JWT token expired",request.getHeaderNames());
-        System.out.println("==============authHeaderst: " + authHeader);
-        System.out.println("==============authHeaderst: " + request.getHeaderNames());
-        //        Enumeration<String> h= request.getHeaders("Authorization");
-//        while(h.hasMoreElements()){
-//            System.out.println(h.nextElement());
-//            logger.warn("=============== JWT token expired",h.nextElement());
-//            authHeader=h.nextElement();
-//        }
-        // 从请求头中获取并验证token
-        logger.error("=========11111111111====== JWT token 真正 ",authHeader);
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            jwtToken = authHeader.substring(7);
-            try {
+        try {
+            String authHeader = request.getHeader("Authorization");
+            String username = null;
+            String jwtToken = null;
+            logger.info("========= JWT token header ====== {}", authHeader);
+            
+            // 从请求头中获取并验证token
+            if (authHeader != null && authHeader.startsWith("Bearer ")) {
+                jwtToken = authHeader.substring(7);
                 username = jwtTokenUtil.getUsernameFromToken(jwtToken);
-            } catch (ExpiredJwtException e) {
-                logger.warn("=============== JWT token expired");
-            } catch (UnsupportedJwtException e) {
-                logger.warn("=============== JWT token is unsupported");
-            } catch (MalformedJwtException e) {
-                logger.warn("=============== Invalid JWT token");
-            } catch (SignatureException e) {
-                logger.warn("=============== Invalid JWT signature");
-            } catch (IllegalArgumentException e) {
-                logger.warn("=============== JWT claims string is empty");
+            } else {
+                logger.warn("=============== JWT token does not begin with Bearer String");
             }
-        } else {
-            logger.warn("=============== JWT token does not begin with Bearer String");
-        }
 
-        // 如果找到了用户名且当前安全上下文中没有认证信息
-        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            // 验证token是否有效
-            if (jwtTokenUtil.validateToken(jwtToken)) {
-                UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
-                UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
-                        userDetails, null, userDetails.getAuthorities());
-                authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                
-                // 设置认证信息到安全上下文
-                SecurityContextHolder.getContext().setAuthentication(authenticationToken);
-                logger.info("=============== User {} authenticated successfully", username);
+            // 如果找到了用户名且当前安全上下文中没有认证信息
+            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                // 验证token是否有效
+                if (jwtTokenUtil.validateToken(jwtToken)) {
+                    UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
+                    UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
+                            userDetails, null, userDetails.getAuthorities());
+                    authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    
+                    // 设置认证信息到安全上下文
+                    SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+                    logger.info("=============== User {} authenticated successfully", username);
+                }
             }
+            
+            // 继续过滤链
+            filterChain.doFilter(request, response);
+        } catch (ExpiredJwtException e) {
+            logger.error("=============== JWT token expired: {}", e.getMessage());
+            handleJwtException(response, Result.unauthorized("JWT token expired"));
+        } catch (UnsupportedJwtException | MalformedJwtException | SignatureException e) {
+            logger.error("=============== Invalid JWT token: {}", e.getMessage());
+            handleJwtException(response, Result.unauthorized("Invalid JWT token"));
+        } catch (IllegalArgumentException e) {
+            logger.error("=============== JWT claims string is empty: {}", e.getMessage());
+            handleJwtException(response, Result.unauthorized("JWT token is empty"));
         }
-        
-        // 继续过滤链
-        filterChain.doFilter(request, response);
+    }
+
+    /**
+     * 处理JWT异常，返回标准化的错误响应
+     */
+    private void handleJwtException(HttpServletResponse response, Result<?> result) throws IOException {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json;charset=UTF-8");
+        PrintWriter writer = response.getWriter();
+        writer.write(objectMapper.writeValueAsString(result));
+        writer.flush();
+        writer.close();
     }
 }

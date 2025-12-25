@@ -13,10 +13,10 @@
     </parent>
 
     <groupId>com.ride</groupId>
-    <artifactId>qianxing-service</artifactId>
+    <artifactId>tcm-service</artifactId>
     <version>1.0.0</version>
-    <name>qianxing-service</name>
-    <description>千行服务 - Spring Boot微服务项目</description>
+    <name>tcm-service</name>
+    <description>TCM服务 - Spring Boot微服务项目</description>
 
     <properties>
         <java.version>17</java.version>

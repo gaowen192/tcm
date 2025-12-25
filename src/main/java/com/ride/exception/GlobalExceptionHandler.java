@@ -1,5 +1,10 @@
 package com.ride.exception;
 
+import com.ride.common.Result;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.SignatureException;
+import io.jsonwebtoken.UnsupportedJwtException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -89,6 +94,25 @@ public class GlobalExceptionHandler {
         result.put("timestamp", LocalDateTime.now());
         
         return ResponseEntity.badRequest().body(result);
+    }
+    
+    /**
+     * 处理JWT过期异常
+     */
+    @ExceptionHandler(ExpiredJwtException.class)
+    public Result<?> handleExpiredJwtException(ExpiredJwtException ex) {
+        log.warn("JWT token expired: {}", ex.getMessage());
+        return Result.unauthorized("JWT token expired");
+    }
+    
+    /**
+     * 处理其他JWT相关异常
+     */
+    @ExceptionHandler({UnsupportedJwtException.class, MalformedJwtException.class, 
+                     SignatureException.class})
+    public Result<?> handleJwtException(Exception ex) {
+        log.warn("Invalid JWT token: {}", ex.getMessage());
+        return Result.unauthorized("Invalid JWT token");
     }
     
     /**

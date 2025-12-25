@@ -4,7 +4,7 @@ server:
     context-path: /api
 spring:
   application:
-    name: qianxing-service
+    name: tcm-service
   
   # 文件上传配置
   servlet:
@@ -16,7 +16,7 @@ spring:
   # 数据库配置
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://95.40.33.105:3306/cmhkdb?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8
+    url: jdbc:mysql://16.162.45.61:3306/cmhkdb?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8
     username: root
     password: "!Smartcmhk123"
     hikari:
@@ -24,7 +24,7 @@ spring:
       minimum-idle: 5
       connection-timeout: 30000
       idle-timeout: 600000
-      max-lifetime: 1800000
+      max-li0ofetime: 1800000
   
   # JPA配置
   jpa:
@@ -98,14 +98,14 @@ springdoc:
     version: 1.0.0
     contact:
       name: 千行团队
-      email: support@qianxing.com
+      email: support@tcm.com
     license:
       name: MIT License
       url: https://opensource.org/licenses/MIT
   packages-to-scan: com.ride.controller
 
 # 自定义配置
-qianxing:
+tcm:
   info:
     app:
       name: 千行服务
