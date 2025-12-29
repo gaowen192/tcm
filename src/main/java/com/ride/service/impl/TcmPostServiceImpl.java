@@ -1,20 +1,22 @@
 package com.ride.service.impl;
 
-import com.ride.dto.TcmPostDTO;
-import com.ride.entity.TcmPost;
-import com.ride.mapper.TcmPostRepository;
-import com.ride.service.TcmPostService;
-import com.ride.service.TcmPostHistoryService;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import com.ride.dto.TcmPostDTO;
+import com.ride.entity.TcmPost;
+import com.ride.mapper.TcmPostRepository;
+import com.ride.service.TcmPostHistoryService;
+import com.ride.service.TcmPostService;
 
 /**
  * 医药论坛帖子业务逻辑实现类
@@ -245,15 +247,38 @@ public class TcmPostServiceImpl implements TcmPostService {
         if (isNew != null && isNew.trim().isEmpty()) {
             isNew = null;
         }
-        isNew="1";
+        
         // 如果keyword是空字符串，则设置为null，保持一致性
         if (keyword != null && keyword.trim().isEmpty()) {
             keyword = null;
         }
         
-        // 调用Repository的动态查询方法
-        Page<TcmPost> postsPage = tcmPostRepository.findByDynamicConditions(
-                hotpost, isNew, keyword, pageable);
+        // 根据isNew和hotpost参数选择不同的查询方法
+        // hotpost=null时，不包含 p.viewCount > 1000 条件
+        // hotpost!=null时，包含 p.viewCount > 1000 条件
+        Page<TcmPost> postsPage;
+        boolean isNewSort = (isNew != null && !isNew.trim().isEmpty());
+        boolean hasHotpost = (hotpost != null && !hotpost.trim().isEmpty());
+        
+        if (isNewSort) {
+            // 按最新排序（按创建时间倒序）
+            if (hasHotpost) {
+                postsPage = tcmPostRepository.findByDynamicConditionsOrderByNewestWithHotpost(
+                        keyword, pageable);
+            } else {
+                postsPage = tcmPostRepository.findByDynamicConditionsOrderByNewestWithoutHotpost(
+                        keyword, pageable);
+            }
+        } else {
+            // 按ID排序（默认排序）
+            if (hasHotpost) {
+                postsPage = tcmPostRepository.findByDynamicConditionsOrderByIdWithHotpost(
+                        keyword, pageable);
+            } else {
+                postsPage = tcmPostRepository.findByDynamicConditionsOrderByIdWithoutHotpost(
+                        keyword, pageable);
+            }
+        }
         
         // 将实体转换为DTO并返回
         return postsPage.map(this::convertToDTO);
@@ -293,7 +318,11 @@ public class TcmPostServiceImpl implements TcmPostService {
     public Page<TcmPostDTO> searchPosts(String keyword, Pageable pageable) {
         log.debug("=============== Searching posts with keyword: {}, pageable: {}", keyword, pageable);
         
-        Page<TcmPost> postsPage = tcmPostRepository.findByTitleContainingOrContentContaining(keyword, keyword, pageable);
+        // 查询中已包含 ORDER BY p.createdAt DESC，创建一个没有排序的 Pageable 避免冲突
+        // 这样 Spring Data JPA 会使用查询中的 ORDER BY
+        Pageable pageableWithoutSort = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize());
+        
+        Page<TcmPost> postsPage = tcmPostRepository.findByTitleContainingOrContentContaining(keyword, keyword, pageableWithoutSort);
         return postsPage.map(this::convertToDTO);
     }
     

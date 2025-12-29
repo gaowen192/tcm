@@ -1,16 +1,16 @@
 package com.ride.mapper;
 
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-
-import com.ride.entity.TcmPost;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
+import com.ride.entity.TcmPost;
 
 /**
  * 医药论坛帖子数据访问层
@@ -22,19 +22,52 @@ import java.util.List;
 public interface TcmPostRepository extends JpaRepository<TcmPost, Long> {
     
     /**
-     * 根据条件动态查询帖子列表
+     * 根据条件动态查询帖子列表（按最新排序，包含热门帖子过滤）
      * 
-     * @param hotpost 是否需要热门帖子过滤
-     * @param isNew 是否需要按最新排序
      * @param keyword 搜索关键词
      * @param pageable 分页参数
      * @return 分页帖子列表
      */
-    @Query("SELECT p FROM TcmPost p WHERE (:hotpost IS NULL OR p.viewCount > 1000) AND (:keyword IS NULL OR p.title LIKE CONCAT('%', :keyword, '%') OR p.content LIKE CONCAT('%', :keyword, '%')) ORDER BY CASE WHEN :isNew IS NOT NULL THEN p.createdAt END DESC, CASE WHEN :isNew IS NULL THEN p.id END ASC")
-    Page<TcmPost> findByDynamicConditions(@Param("hotpost") String hotpost, 
-                                         @Param("isNew") String isNew, 
-                                         @Param("keyword") String keyword, 
-                                         Pageable pageable);
+    @Query(value = "SELECT p FROM TcmPost p WHERE p.viewCount > 1000 AND (:keyword IS NULL OR p.title LIKE CONCAT('%', :keyword, '%') OR p.content LIKE CONCAT('%', :keyword, '%')) ORDER BY p.createdAt DESC, p.id ASC",
+           countQuery = "SELECT COUNT(p) FROM TcmPost p WHERE p.viewCount > 1000 AND (:keyword IS NULL OR p.title LIKE CONCAT('%', :keyword, '%') OR p.content LIKE CONCAT('%', :keyword, '%'))")
+    Page<TcmPost> findByDynamicConditionsOrderByNewestWithHotpost(@Param("keyword") String keyword, 
+                                                                    Pageable pageable);
+    
+    /**
+     * 根据条件动态查询帖子列表（按最新排序，不包含热门帖子过滤）
+     * 
+     * @param keyword 搜索关键词
+     * @param pageable 分页参数
+     * @return 分页帖子列表
+     */
+    @Query(value = "SELECT p FROM TcmPost p WHERE (:keyword IS NULL OR p.title LIKE CONCAT('%', :keyword, '%') OR p.content LIKE CONCAT('%', :keyword, '%')) ORDER BY p.createdAt DESC, p.id ASC",
+           countQuery = "SELECT COUNT(p) FROM TcmPost p WHERE (:keyword IS NULL OR p.title LIKE CONCAT('%', :keyword, '%') OR p.content LIKE CONCAT('%', :keyword, '%'))")
+    Page<TcmPost> findByDynamicConditionsOrderByNewestWithoutHotpost(@Param("keyword") String keyword, 
+                                                                      Pageable pageable);
+    
+    /**
+     * 根据条件动态查询帖子列表（按ID排序，包含热门帖子过滤）
+     * 
+     * @param keyword 搜索关键词
+     * @param pageable 分页参数
+     * @return 分页帖子列表
+     */
+    @Query(value = "SELECT p FROM TcmPost p WHERE p.viewCount > 1000 AND (:keyword IS NULL OR p.title LIKE CONCAT('%', :keyword, '%') OR p.content LIKE CONCAT('%', :keyword, '%')) ORDER BY p.id ASC",
+           countQuery = "SELECT COUNT(p) FROM TcmPost p WHERE p.viewCount > 1000 AND (:keyword IS NULL OR p.title LIKE CONCAT('%', :keyword, '%') OR p.content LIKE CONCAT('%', :keyword, '%'))")
+    Page<TcmPost> findByDynamicConditionsOrderByIdWithHotpost(@Param("keyword") String keyword, 
+                                                                Pageable pageable);
+    
+    /**
+     * 根据条件动态查询帖子列表（按ID排序，不包含热门帖子过滤）
+     * 
+     * @param keyword 搜索关键词
+     * @param pageable 分页参数
+     * @return 分页帖子列表
+     */
+    @Query(value = "SELECT p FROM TcmPost p WHERE (:keyword IS NULL OR p.title LIKE CONCAT('%', :keyword, '%') OR p.content LIKE CONCAT('%', :keyword, '%')) ORDER BY p.id ASC",
+           countQuery = "SELECT COUNT(p) FROM TcmPost p WHERE (:keyword IS NULL OR p.title LIKE CONCAT('%', :keyword, '%') OR p.content LIKE CONCAT('%', :keyword, '%'))")
+    Page<TcmPost> findByDynamicConditionsOrderByIdWithoutHotpost(@Param("keyword") String keyword, 
+                                                                   Pageable pageable);
     
     /**
      * 根据用户ID查找帖子列表
@@ -177,14 +210,15 @@ public interface TcmPostRepository extends JpaRepository<TcmPost, Long> {
     List<TcmPost> findByTitleContainingOrContentContaining(@Param("title") String title, @Param("content") String content);
     
     /**
-     * 根据标题或内容搜索帖子（分页）
+     * 根据标题或内容搜索帖子（分页，按创建时间倒序）
      * 
      * @param title 标题关键字
      * @param content 内容关键字
      * @param pageable 分页参数
      * @return 分页帖子列表
      */
-    @Query("SELECT p FROM TcmPost p WHERE (p.title LIKE CONCAT('%', :title, '%') OR p.content LIKE CONCAT('%', :content, '%')) AND p.status = 1")
+    @Query(value = "SELECT p FROM TcmPost p WHERE (p.title LIKE CONCAT('%', :title, '%') OR p.content LIKE CONCAT('%', :content, '%')) AND p.status = 1 ORDER BY p.createdAt  desc",
+           countQuery = "SELECT COUNT(p) FROM TcmPost p WHERE (p.title LIKE CONCAT('%', :title, '%') OR p.content LIKE CONCAT('%', :content, '%')) AND p.status = 1")
     Page<TcmPost> findByTitleContainingOrContentContaining(@Param("title") String title, @Param("content") String content, Pageable pageable);
     
     /**

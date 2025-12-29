@@ -1,11 +1,10 @@
 package com.ride.service.impl;
 
-import com.ride.dto.TcmArticleDTO;
-import com.ride.entity.TcmArticle;
-import com.ride.entity.TcmArticleHistory;
-import com.ride.mapper.TcmArticleRepository;
-import com.ride.mapper.TcmArticleHistoryRepository;
-import com.ride.service.TcmArticleService;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
@@ -16,10 +15,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import com.ride.dto.TcmArticleDTO;
+import com.ride.entity.TcmArticle;
+import com.ride.entity.TcmArticleHistory;
+import com.ride.mapper.TcmArticleHistoryRepository;
+import com.ride.mapper.TcmArticleRepository;
+import com.ride.service.TcmArticleService;
 
 /**
  * 医药论坛文章服务层实现类
@@ -67,6 +68,9 @@ public class TcmArticleServiceImpl implements TcmArticleService {
         }
         if (article.getIsRecommended() == null) {
             article.setIsRecommended(false);
+        }
+        if (article.getIsUpdated() == null) {
+            article.setIsUpdated(0); // 默认未更新
         }
         
         return tcmArticleRepository.save(article);
