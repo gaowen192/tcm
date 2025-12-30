@@ -1,9 +1,17 @@
 package com.ride.service.impl;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
+import org.springframework.web.multipart.MultipartFile;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,9 +51,11 @@ public class TcmArticleServiceImpl implements TcmArticleService {
     @Transactional
     public TcmArticle createArticle(TcmArticleDTO articleDTO) {
         logger.info("===============Creating article: {}", articleDTO.getTitle());
+        logger.info("===============ArticleDTO categoryId: {}", articleDTO.getCategoryId());
         
         TcmArticle article = new TcmArticle();
         BeanUtils.copyProperties(articleDTO, article);
+        logger.info("===============Mapped TcmArticle categoryId: {}", article.getCategoryId());
         
         // 设置默认值
         if (article.getStatus() == null) {
@@ -77,10 +87,87 @@ public class TcmArticleServiceImpl implements TcmArticleService {
     }
     
     @Override
+    @Transactional
+    public TcmArticle createArticle(TcmArticleDTO articleDTO, MultipartFile file) throws IOException {
+        logger.info("===============Creating article with file upload: {}", articleDTO.getTitle());
+        
+        // 先创建文章
+        TcmArticle article = createArticle(articleDTO);
+        
+        // 处理文件上传
+        if (file != null && !file.isEmpty()) {
+            String coverImagePath = handleFileUpload(file);
+            article.setCoverImage(coverImagePath);
+            article = tcmArticleRepository.save(article);
+        }
+        
+        return article;
+    }
+    
+    @Override
     public TcmArticle getArticleById(Long id) {
         logger.info("===============Getting article by id: {}", id);
         return tcmArticleRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Article not found with id: " + id));
+    }
+    
+    /**
+     * 处理文件上传
+     * 
+     * @param file 上传的文件
+     * @return 文件的相对路径
+     * @throws IOException 文件处理异常
+     */
+    private String handleFileUpload(MultipartFile file) throws IOException {
+        logger.info("===============Handling file upload: {}", file.getOriginalFilename());
+        
+        // 获取原始文件名和扩展名
+        String originalFilename = file.getOriginalFilename();
+        String extension = "";
+        if (originalFilename != null && originalFilename.contains(".")) {
+            extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+        }
+        
+        // 生成唯一的文件名
+        String uniqueFilename = UUID.randomUUID().toString() + extension;
+        
+        // 创建日期格式的目录结构（yyyyMMdd）
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
+        String datePath = dateFormat.format(new Date());
+        
+        // 文件存储路径
+        String uploadDir = "uploads/videos/" + datePath;
+        Path uploadPath = Paths.get(uploadDir);
+        
+        // 创建目录（如果不存在）
+        if (!Files.exists(uploadPath)) {
+            Files.createDirectories(uploadPath);
+            logger.info("===============Created directory: {}", uploadDir);
+        }
+        
+        // 完整的文件路径
+        Path filePath = uploadPath.resolve(uniqueFilename);
+        
+        // 保存文件
+        Files.write(filePath, file.getBytes());
+        logger.info("===============File saved to: {}", filePath.toString());
+        
+        // 返回相对路径
+        return "/" + uploadDir + "/" + uniqueFilename;
+    }
+    
+    @Override
+    @Transactional
+    public TcmArticle updateArticle(Long id, TcmArticleDTO articleDTO, MultipartFile file) throws IOException {
+        logger.info("===============Updating article with cover image: {}", id);
+        
+        // 上传封面图片
+        if (file != null && !file.isEmpty()) {
+            String coverImagePath = handleFileUpload(file);
+            articleDTO.setCoverImage(coverImagePath);
+        }
+        
+        return updateArticle(id, articleDTO);
     }
     
     @Override

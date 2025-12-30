@@ -20,7 +20,15 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
+import java.util.*;
 import java.util.List;
 import java.util.Map;
 
@@ -55,13 +63,48 @@ public class TcmArticleController {
         @ApiResponse(responseCode = "400", description = "请求参数无效"),
         @ApiResponse(responseCode = "500", description = "服务器内部错误")
     })
-    @PostMapping
+    @PostMapping(consumes = {"multipart/form-data"})
     public Result<TcmArticle> createArticle(
-            @Parameter(description = "文章信息", required = true)
-            @RequestBody TcmArticleDTO articleDTO) {
-        logger.info("===============Received request to create article: {}", articleDTO.getTitle());
+            @Parameter(description = "文章标题", required = true)
+            @RequestParam String title,
+            @Parameter(description = "文章内容", required = true)
+            @RequestParam String content,
+            @Parameter(description = "用户ID", required = true)
+            @RequestParam Long userId,
+            @Parameter(description = "用户名", required = true)
+            @RequestParam String userName,
+            @Parameter(description = "板块ID", required = true)
+            @RequestParam Long categoryId,
+            @Parameter(description = "文章标签", required = false)
+            @RequestParam(required = false) String tags,
+            @Parameter(description = "SEO标题", required = false)
+            @RequestParam(required = false) String seoTitle,
+            @Parameter(description = "SEO关键词", required = false)
+            @RequestParam(required = false) String seoKeywords,
+            @Parameter(description = "SEO描述", required = false)
+            @RequestParam(required = false) String seoDescription,
+            @Parameter(description = "作者IP", required = false)
+            @RequestParam(required = false) String authorIp,
+            @Parameter(description = "封面图片", required = false)
+            @RequestPart(value = "file", required = false) MultipartFile file) throws IOException {
+        logger.info("===============Received request to create article: {}", title);
+        logger.info("===============Article categoryId: {}", categoryId);
         try {
-            TcmArticle article = tcmArticleService.createArticle(articleDTO);
+            // Create DTO from individual parameters
+            TcmArticleDTO articleDTO = new TcmArticleDTO();
+            articleDTO.setTitle(title);
+            articleDTO.setContent(content);
+            articleDTO.setUserId(userId);
+            articleDTO.setUserName(userName);
+            articleDTO.setCategoryId(categoryId);
+            articleDTO.setTags(tags);
+            articleDTO.setSeoTitle(seoTitle);
+            articleDTO.setSeoKeywords(seoKeywords);
+            articleDTO.setSeoDescription(seoDescription);
+            articleDTO.setAuthorIp(authorIp);
+            articleDTO.setStatus(1); // Default status
+            
+            TcmArticle article = tcmArticleService.createArticle(articleDTO, file);
             return Result.success("Article created successfully", article);
         } catch (Exception e) {
             logger.error("===============Error creating article", e);
@@ -120,15 +163,56 @@ public class TcmArticleController {
         @ApiResponse(responseCode = "404", description = "文章不存在"),
         @ApiResponse(responseCode = "500", description = "服务器内部错误")
     })
-    @PutMapping("/{id}")
+    @PutMapping(value = "/{id}", consumes = {"multipart/form-data"})
     public Result<TcmArticle> updateArticle(
             @Parameter(description = "文章ID", required = true, example = "1")
             @PathVariable Long id,
-            @Parameter(description = "文章信息", required = true)
-            @RequestBody TcmArticleDTO articleDTO) {
+            @Parameter(description = "文章标题", required = true)
+            @RequestParam String title,
+            @Parameter(description = "文章内容", required = true)
+            @RequestParam String content,
+            @Parameter(description = "用户ID", required = true)
+            @RequestParam Long userId,
+            @Parameter(description = "用户名", required = true)
+            @RequestParam String userName,
+            @Parameter(description = "板块ID", required = true)
+            @RequestParam Long categoryId,
+            @Parameter(description = "文章标签", required = false)
+            @RequestParam(required = false) String tags,
+            @Parameter(description = "SEO标题", required = false)
+            @RequestParam(required = false) String seoTitle,
+            @Parameter(description = "SEO关键词", required = false)
+            @RequestParam(required = false) String seoKeywords,
+            @Parameter(description = "SEO描述", required = false)
+            @RequestParam(required = false) String seoDescription,
+            @Parameter(description = "作者IP", required = false)
+            @RequestParam(required = false) String authorIp,
+            @Parameter(description = "文章状态，1-启用，0-禁用，2-审核中", required = true, example = "1")
+            @RequestParam Integer status,
+            @Parameter(description = "是否热门", required = false)
+            @RequestParam(defaultValue = "false") boolean isHot,
+            @Parameter(description = "是否推荐", required = false)
+            @RequestParam(defaultValue = "false") boolean isRecommended,
+            @Parameter(description = "封面图片", required = false)
+            @RequestPart(value = "file", required = false) MultipartFile file) throws IOException {
         logger.info("===============Received request to update article: {}", id);
         try {
-            TcmArticle article = tcmArticleService.updateArticle(id, articleDTO);
+            // Create DTO from individual parameters
+            TcmArticleDTO articleDTO = new TcmArticleDTO();
+            articleDTO.setTitle(title);
+            articleDTO.setContent(content);
+            articleDTO.setUserId(userId);
+            articleDTO.setUserName(userName);
+            articleDTO.setCategoryId(categoryId);
+            articleDTO.setTags(tags);
+            articleDTO.setSeoTitle(seoTitle);
+            articleDTO.setSeoKeywords(seoKeywords);
+            articleDTO.setSeoDescription(seoDescription);
+            articleDTO.setAuthorIp(authorIp);
+            articleDTO.setStatus(status);
+
+            
+            TcmArticle article = tcmArticleService.updateArticle(id, articleDTO, file);
             return Result.success("Article updated successfully", article);
         } catch (Exception e) {
             logger.error("===============Error updating article: {}", id, e);

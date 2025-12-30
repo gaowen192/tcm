@@ -3,9 +3,11 @@ package com.ride.service;
 import com.ride.dto.TcmArticleDTO;
 import com.ride.entity.TcmArticle;
 import org.springframework.data.domain.Pageable;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
+import java.io.IOException;
 
 /**
  * 医药论坛文章服务层接口
@@ -24,6 +26,16 @@ public interface TcmArticleService {
     TcmArticle createArticle(TcmArticleDTO articleDTO);
     
     /**
+     * 创建文章并上传封面图片
+     * 
+     * @param articleDTO 文章DTO
+     * @param file 封面图片文件
+     * @return 创建的文章
+     * @throws IOException 文件处理异常
+     */
+    TcmArticle createArticle(TcmArticleDTO articleDTO, MultipartFile file) throws IOException;
+    
+    /**
      * 根据ID获取文章
      * 
      * @param id 文章ID
@@ -39,6 +51,17 @@ public interface TcmArticleService {
      * @return 更新后的文章
      */
     TcmArticle updateArticle(Long id, TcmArticleDTO articleDTO);
+    
+    /**
+     * 更新文章并上传封面图片
+     * 
+     * @param id 文章ID
+     * @param articleDTO 文章DTO
+     * @param file 封面图片文件
+     * @return 更新后的文章
+     * @throws IOException 文件处理异常
+     */
+    TcmArticle updateArticle(Long id, TcmArticleDTO articleDTO, MultipartFile file) throws IOException;
     
     /**
      * 删除文章
