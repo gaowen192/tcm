@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.ride.dto.TcmPostDTO;
 import com.ride.entity.TcmPost;
 import com.ride.mapper.TcmPostRepository;
+import com.ride.mapper.TcmUserRepository;
 import com.ride.service.TcmPostHistoryService;
 import com.ride.service.TcmPostService;
 
@@ -32,6 +33,9 @@ public class TcmPostServiceImpl implements TcmPostService {
     
     @Autowired
     private TcmPostRepository tcmPostRepository;
+    
+    @Autowired
+    private TcmUserRepository tcmUserRepository;
     
     @Override
     public TcmPostDTO createPost(TcmPost post) {
@@ -195,8 +199,9 @@ public class TcmPostServiceImpl implements TcmPostService {
         log.info("用户{}对帖子{}执行点赞操作", userId, postId);
         
         // 验证帖子是否存在
-        TcmPost post = tcmPostRepository.findById(postId)
-                .orElseThrow(() -> new IllegalArgumentException("帖子不存在，ID：" + postId));
+        if (!tcmPostRepository.existsById(postId)) {
+            throw new IllegalArgumentException("帖子不存在，ID：" + postId);
+        }
         
         tcmPostRepository.likePost(postId);
         log.info("用户{}对帖子{}点赞成功", userId, postId);
@@ -403,6 +408,21 @@ public class TcmPostServiceImpl implements TcmPostService {
         dto.setCreatedAt(post.getCreatedAt());
         dto.setUpdatedAt(post.getUpdatedAt());
         dto.setIsUpdated(post.getIsUpdated());
+        dto.setSummary(post.getSummary());
+        dto.setTags(post.getTags());
+        dto.setIsTop(post.getIsTop());
+        dto.setIsEssence(post.getIsEssence());
+        dto.setIsHot(post.getIsHot());
+        dto.setLastReplyTime(post.getLastReplyTime());
+        
+        // 查询用户信息并设置 userName 和 realName
+        if (post.getUserId() != null) {
+            tcmUserRepository.findById(post.getUserId()).ifPresent(user -> {
+                dto.setUserName(user.getUsername());
+                dto.setRealName(user.getRealName());
+            });
+        }
+        
         return dto;
     }
 }

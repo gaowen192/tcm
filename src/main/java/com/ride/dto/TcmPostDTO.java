@@ -1,8 +1,8 @@
 package com.ride.dto;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-
 import java.time.LocalDateTime;
+
+import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
  * 医药论坛帖子数据传输对象
@@ -69,6 +69,12 @@ public class TcmPostDTO {
     
     @Schema(description = "最后回复时间")
     private LocalDateTime lastReplyTime;
+    
+    @Schema(description = "用户名", example = "zhangsan")
+    private String userName;
+    
+    @Schema(description = "真实姓名", example = "张三")
+    private String realName;
 
     // 无参构造函数
     public TcmPostDTO() {
@@ -157,6 +163,12 @@ public class TcmPostDTO {
     
     public LocalDateTime getLastReplyTime() { return lastReplyTime; }
     public void setLastReplyTime(LocalDateTime lastReplyTime) { this.lastReplyTime = lastReplyTime; }
+    
+    public String getUserName() { return userName; }
+    public void setUserName(String userName) { this.userName = userName; }
+    
+    public String getRealName() { return realName; }
+    public void setRealName(String realName) { this.realName = realName; }
 
     // toString方法
     @Override
@@ -181,6 +193,8 @@ public class TcmPostDTO {
                 ", createdAt=" + createdAt +
                 ", updatedAt=" + updatedAt +
                 ", lastReplyTime=" + lastReplyTime +
+                ", userName='" + userName + '\'' +
+                ", realName='" + realName + '\'' +
                 '}';
     }
 
@@ -208,7 +222,9 @@ public class TcmPostDTO {
                 java.util.Objects.equals(status, that.status) &&
                 java.util.Objects.equals(createdAt, that.createdAt) &&
                 java.util.Objects.equals(updatedAt, that.updatedAt) &&
-                java.util.Objects.equals(lastReplyTime, that.lastReplyTime);
+                java.util.Objects.equals(lastReplyTime, that.lastReplyTime) &&
+                java.util.Objects.equals(userName, that.userName) &&
+                java.util.Objects.equals(realName, that.realName);
     }
 
     // hashCode方法
@@ -216,6 +232,6 @@ public class TcmPostDTO {
     public int hashCode() {
         return java.util.Objects.hash(id, title, content, summary, userId, categoryId, tags, viewCount, 
                                     replyCount, likeCount, collectCount, isTop, isEssence, isHot, isUpdated, status, 
-                                    createdAt, updatedAt, lastReplyTime);
+                                    createdAt, updatedAt, lastReplyTime, userName, realName);
     }
 }
